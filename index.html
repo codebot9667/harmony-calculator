@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harmony Draught Calculator</title>
+
+<style>
+body{
+  font-family:system-ui,sans-serif;
+  background:#14121c;
+  color:#e8e4f3;
+  margin:0;
+  padding:24px;
+}
+
+.wrap{
+  max-width:900px;
+  margin:auto;
+}
+
+h1{
+  margin-top:0;
+}
+
+.input{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
+  background:#1f1b2e;
+  padding:16px;
+  border-radius:12px;
+}
+
+input{
+  font-size:1.3rem;
+  width:140px;
+  padding:8px;
+  border-radius:8px;
+  border:1px solid #4b4370;
+  background:#14121c;
+  color:#fff;
+}
+
+.btn{
+  padding:8px 14px;
+  border-radius:8px;
+  border:0;
+  background:#6d5bd0;
+  color:#fff;
+  cursor:pointer;
+  font-size:1rem;
+}
+
+.btn:hover{
+  background:#7b69e0;
+}
+
+.card{
+  background:#1f1b2e;
+  border-radius:12px;
+  padding:16px;
+  margin-top:16px;
+}
+
+.card h2{
+  margin:0 0 8px;
+  font-size:1.2rem;
+  color:#b9a8ff;
+}
+
+.elixir{
+  margin:10px 0 0;
+  padding-left:12px;
+  border-left:3px solid #4b4370;
+}
+
+.elixir h3{
+  margin:0 0 4px;
+  font-size:1rem;
+}
+
+ul{
+  margin:4px 0;
+  padding-left:20px;
+}
+
+li{
+  max-width:380px;
+}
+
+li span{
+  float:right;
+  font-weight:bold;
+  color:#ffd479;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+td,th{
+  padding:6px 8px;
+  border-bottom:1px solid #342e4d;
+  text-align:left;
+}
+
+td:last-child,
+th:last-child{
+  text-align:left;
+}
+
+.total td:last-child{
+  color:#ffd479;
+  font-weight:bold;
+}
+
+.category{
+  background:#2a2540;
+  color:#d8ccff;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+
+@media(max-width:700px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<h1>Harmony Draught Calculator</h1>
+
+<div class="input">
+  <button class="btn" onclick="setMode('harmony')">Harmony</button>
+  <button class="btn" onclick="setMode('edania')">Edania</button>
+  <button class="btn" onclick="setMode('kamasylvia')">Kamasylvia</button>
+  <button class="btn" onclick="setMode('demihuman')">Demihuman</button>
+  <button class="btn" onclick="setMode('human')">Human</button>
+</div>
+
+<div class="input">
+  <label for="qty">Harmony Draughts to craft:</label>
+
+  <input id="qty" type="number" min="0" step="1" value="10">
+
+</div>
+
+<div class="card" style="
+  background:#3a2416;
+  border:2px solid #ffb347;
+">
+  <h2 style="color:#ffb347;">⚠ Warning</h2>
+
+  <ul>
+    <li>
+      Do NOT use the entire stack of ingredients at the Alchemy Table. It will consume the entire stack and give you only 1 single elixir.
+    </li>
+    <br>
+    <li>
+      Only use the exact amount required to craft 1 elixir.
+    </li>
+    <br>
+    <li>
+      Example: Elixir of Fury ×1<br>Dwarf Mushroom ×4 / Ash Sap ×1 / Lion Blood ×4 / Purified Water ×3
+    </li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>Notes</h2>
+  <ul>
+    <li>You may end up getting more elixirs depending on your Alchemy Mastery.</li><br>
+    <li>All shown required elixirs are green-grade elixirs.</li><br>
+    <li>Blue-grade elixirs can be used as a substitute to green-grade elixirs at a 1:3 ratio.<br>30 green elixirs = 10 blue elixirs.</li><br>
+    <li>To craft draughts use processing/simple alchemy.<br>To craft elixirs use alchemy table at your residence.</li><br>
+  </ul>
+</div>
+
+<div id="out"></div>
+
+</div>
+
+<script>
+
+let currentMode = "harmony";
+
+function setMode(mode){
+  currentMode = mode;
+  render();
+}
+
+const BASE = 10;
+
+const DATA = {
+ "Fury Draught": {
+  "Elixir of Fury":"Dwarf Mushroom:120,Ash Sap:30,Lion/Bear/Troll Blood:120,Purified Water:90",
+  "Elixir of Frenzy":"Oil of Regeneration:30,Clear Liquid Reagent:150,Cedar Sap:150,Trace of Nature:90,Ghost Mushroom:60",
+  "Elixir of Concentration":"Clear Liquid Reagent:30,Cloud Mushroom:90,Wild Grass:60,Lion/Bear/Troll Blood:90",
+  "Elixir of Destruction":"Oil of Storms:30,Trace of Nature:90,Clear Liquid Reagent:150,Powder of Flame:150,Snowfield Cedar Sap:210"
+ },
+
+ "Adaptation Draught": {
+  "Defense Elixir":"Clear Liquid Reagent:30,Ash Sap:180,Sheep/Deer/Pig Blood:150,Purified Water:90",
+  "Helix Elixir":"Thuja Sap:180,Monk's Branch:90,Clown's Blood:60,Powder of Flame:60,Purified Water:90",
+  "Elixir of Life":"Pure Powder Reagent:30,Silver Azalea:90,Fox/Weasel Blood:150,HP Potion (Small):90",
+  "Elixir of Endurance":"Pure Powder Reagent:30,Dwarf Mushroom:60,Birch Sap:150,Lion/Bear/Troll Blood:120"
+ },
+
+ "Potential Draught": {
+  "Elixir of Wind":"Wise Man's Blood:30,Fortune Teller Mushroom:150,Pine Sap:150,Powder of Darkness:60",
+  "Elixir of Spells":"Tyrant's Blood:30,Fire Flake Flower:150,Maple Sap:90,Powder of Darkness:60",
+  "Elixir of Shock":"Clown's Blood:30,Tiger Mushroom:150,Cedar Sap:210,Powder of Time:90",
+  "Elixir of Swiftness":"Legendary Beast's Blood:30,Arrow Mushroom:150,Birch Sap:150,Powder of Darkness:60"
+ },
+
+ "Corruption Draught": {
+  "Elixir of Perforation":"Oil of Corruption:30,Clear Liquid Reagent:120,Bluffer Mushroom:150,Pine Sap:150,Trace of Nature:60",
+  "Elixir of Death":"Oil of Tranquility:30,Clear Liquid Reagent:180,Ancient Mushroom:60,Ash Sap:210,Trace of Nature:60",
+  "Elixir of Draining":"Oil of Fortitude:30,Clear Liquid Reagent:120,Hump Mushroom:90,Birch Sap:120,Trace of Nature:60",
+  "Grim Reaper's Elixir":"Oil of Fortitude:30,Pure Powder Reagent:120,Sky Mushroom:60,Monk's Branch:60,Trace of Nature:120"
+ },
+
+ "Berserk Draught": {
+  "Elixir of Assassination":"Oil of Regeneration:30,Pure Powder Reagent:150,Amanita Mushroom:120,Red Tree Lump:60,Trace of Nature:60",
+  "Elixir of Detection":"Oil of Storms:30,Pure Powder Reagent:180,Truffle Mushroom:90,Old Tree Bark:60,Trace of Nature:90",
+  "Elixir of Carnage":"Oil of Corruption:30,Pure Powder Reagent:210,Tiger Mushroom:60,Spirit's Leaf:60,Trace of Nature:90",
+  "Elixir of Sky":"Oil of Tranquility:30,Pure Powder Reagent:180,Emperor Mushroom:30,Bloody Tree Knot:60,Trace of Nature:120"
+ }
+};
+
+const ELIXIR_BASE = 30;
+const DRAUGHT_BASE = 10;
+const CATALYST_BASE = 10;
+
+const qty = document.getElementById('qty');
+
+function fmt(n){
+  return Number.isInteger(n)
+    ? n.toLocaleString()
+    : (Math.round(n * 100) / 100).toLocaleString();
+}
+
+function setQty(n){
+  qty.value = n;
+  render();
+}
+
+function categorize(name){
+
+  const text = name.toLowerCase();
+
+  // Special cases that should remain in Basic Material
+  if (
+    text === 'bloody tree knot'
+  ) {
+    return 'Basic Materials';
+  }
+
+  if (text.includes('sap')) {
+    return 'Saps';
+  }
+
+  if (text.includes('mushroom')) {
+    return 'Mushrooms';
+  }
+
+  if (text.includes('blood')) {
+    return 'Bloods';
+  }
+
+  if (text.includes('oil')) {
+    return 'Oils';
+  }
+
+  // Pure Powder Reagent belongs in Basic Material
+  if (
+    text.includes('powder') &&
+    text !== 'pure powder reagent'
+  ) {
+    return 'Powders';
+  }
+
+  return 'Basic Materials';
+}
+function render(){
+
+  const n = Math.max(0, parseFloat(qty.value) || 0);
+  const factor = n / BASE;
+
+  const totals = {};
+
+  const add = (name, amount) => {
+    totals[name] = (totals[name] || 0) + amount;
+  };
+
+  let breakdownHtml = '';
+  let catalysts = 0;
+
+for(const [draughtName, elixirs] of Object.entries(DATA)){
+
+    const draughtAmount = DRAUGHT_BASE * factor;
+    const catalystAmount = CATALYST_BASE * factor;
+
+    catalysts += catalystAmount;
+
+    breakdownHtml += `
+      <div class="card">
+        <h2>${draughtName} × ${fmt(draughtAmount)}</h2>
+        <div class="elixir">
+          <h3>Spellbound Catalyst × ${fmt(catalystAmount)}</h3>
+        </div>
+    `;
+
+    for(const [elixirName, ingredients] of Object.entries(elixirs)){
+
+      breakdownHtml += `
+        <div class="elixir">
+          <h3>${elixirName} × ${fmt(ELIXIR_BASE * factor)}</h3>
+          <ul>
+      `;
+
+      ingredients.split(',').forEach(entry => {
+
+        const pos = entry.lastIndexOf(':');
+
+        const ingredient = entry.slice(0, pos);
+        const amount = Number(entry.slice(pos + 1)) * factor;
+
+        add(ingredient, amount);
+
+        breakdownHtml += `
+          <li>${ingredient}<span>${fmt(amount)}</span></li>
+        `;
+      });
+
+      breakdownHtml += `
+          </ul>
+        </div>
+      `;
+    }
+
+    breakdownHtml += `</div>`;
+  }
+  
+if(currentMode === "edania"){
+
+  const edaniaCount = n * 3;
+
+  // Additional catalyst
+  catalysts += n;
+  
+  
+  // Elixir of Edania
+  add("Sinner's Blood", 2 * edaniaCount);
+  add("Trace of Nature", 4 * edaniaCount);
+  add("Old Tree Bark", 5 * edaniaCount);
+  add("Clear Liquid Reagent", 5 * edaniaCount);
+  add("Caphras Tree Sap", 6 * edaniaCount);
+
+  // Elixir of Will
+  add("Pure Powder Reagent", 1 * edaniaCount);
+  add("Wolf/Rhino Blood", 6 * edaniaCount);
+  add("Sunrise Herb", 4 * edaniaCount);
+  add("Purified Water", 3 * edaniaCount);
+
+  breakdownHtml += `
+    <div class="card">
+      <h2>Harmony Draught - Edania × ${fmt(n)}</h2>
+      <div class="elixir">
+	  
+        <h3>Spellbound Catalyst × ${fmt(n)}</h3>
+      </div>
+	  
+	  <div class="elixir">
+	  
+        <h3>Harmony Draught × ${fmt(n)}</h3>
+      </div>
+
+      <div class="elixir">
+        <h3>Elixir of Edania × ${fmt(edaniaCount)}</h3>
+        <ul>
+          <li>Sinner's Blood <span>${fmt(2 * edaniaCount)}</span></li>
+          <li>Trace of Nature <span>${fmt(4 * edaniaCount)}</span></li>
+          <li>Old Tree Bark <span>${fmt(5 * edaniaCount)}</span></li>
+          <li>Clear Liquid Reagent <span>${fmt(5 * edaniaCount)}</span></li>
+          <li>Caphras Tree Sap <span>${fmt(6 * edaniaCount)}</span></li>
+        </ul>
+      </div>
+
+      <div class="elixir">
+        <h3>Elixir of Will × ${fmt(edaniaCount)}</h3>
+        <ul>
+          <li>Pure Powder Reagent <span>${fmt(1 * edaniaCount)}</span></li>
+          <li>Wolf/Rhino Blood <span>${fmt(6 * edaniaCount)}</span></li>
+          <li>Sunrise Herb <span>${fmt(4 * edaniaCount)}</span></li>
+          <li>Purified Water <span>${fmt(3 * edaniaCount)}</span></li>
+        </ul>
+      </div>
+
+    </div>
+  `;
+}
+
+if(currentMode === "kamasylvia"){
+
+  const kamasylviaCount = n * 3;
+
+  // Additional catalyst
+  catalysts += n;
+  
+  
+  // Griffon's Elixir
+  add("Griffon Claw", 1 * kamasylviaCount);
+  add("Cedar Sap", 6 * kamasylviaCount);
+  add("Trace of Nature", 3 * kamasylviaCount);
+  add("Purified Water", 3 * kamasylviaCount);
+  add("Sinner's Blood", 2 * kamasylviaCount);
+
+  // Elixir of Will
+  add("Pure Powder Reagent", 1 * kamasylviaCount);
+  add("Wolf/Rhino Blood", 6 * kamasylviaCount);
+  add("Sunrise Herb", 4 * kamasylviaCount);
+  add("Purified Water", 3 * kamasylviaCount);
+
+  breakdownHtml += `
+    <div class="card">
+      <h2>Harmony Draught - Kamasylvia × ${fmt(n)}</h2>
+      <div class="elixir">
+	  
+        <h3>Spellbound Catalyst × ${fmt(n)}</h3>
+      </div>
+	  
+	  <div class="elixir">
+	  
+        <h3>Harmony Draught × ${fmt(n)}</h3>
+      </div>
+
+      <div class="elixir">
+        <h3>Griffon's Elixir × ${fmt(kamasylviaCount)}</h3>
+        <ul>
+          <li>Griffon Claw <span>${fmt(1 * kamasylviaCount)}</span></li>
+          <li>Cedar Sap <span>${fmt(6 * kamasylviaCount)}</span></li>
+          <li>Trace of Nature <span>${fmt(3 * kamasylviaCount)}</span></li>
+          <li>Purified Water <span>${fmt(3 * kamasylviaCount)}</span></li>
+          <li>Sinner's Blood <span>${fmt(2 * kamasylviaCount)}</span></li>
+        </ul>
+      </div>
+
+      <div class="elixir">
+        <h3>Elixir of Will × ${fmt(kamasylviaCount)}</h3>
+        <ul>
+          <li>Pure Powder Reagent <span>${fmt(1 * kamasylviaCount)}</span></li>
+          <li>Wolf/Rhino Blood <span>${fmt(6 * kamasylviaCount)}</span></li>
+          <li>Sunrise Herb <span>${fmt(4 * kamasylviaCount)}</span></li>
+          <li>Purified Water <span>${fmt(3 * kamasylviaCount)}</span></li>
+        </ul>
+      </div>
+
+    </div>
+  `;
+}
+
+if(currentMode === "demihuman"){
+
+  const demihumanCount = n * 3;
+
+  // Additional catalyst
+  catalysts += n;
+  
+  
+  // Elixir of Demihuman
+  add("Sinner's Blood", 1 * demihumanCount);
+  add("Arrow Mushroom", 4 * demihumanCount);
+  add("Black Stone Powder", 3 * demihumanCount);
+  add("Fir Sap", 4 * demihumanCount);
+
+  // Elixir of Will
+  add("Pure Powder Reagent", 1 * demihumanCount);
+  add("Wolf/Rhino Blood", 6 * demihumanCount);
+  add("Sunrise Herb", 4 * demihumanCount);
+  add("Purified Water", 3 * demihumanCount);
+
+  breakdownHtml += `
+    <div class="card">
+      <h2>Harmony Draught - Demihuman × ${fmt(n)}</h2>
+      <div class="elixir">
+	  
+        <h3>Spellbound Catalyst × ${fmt(n)}</h3>
+      </div>
+	  
+	  <div class="elixir">
+	  
+        <h3>Harmony Draught × ${fmt(n)}</h3>
+      </div>
+
+      <div class="elixir">
+        <h3>Elixir of Demihuman × ${fmt(demihumanCount)}</h3>
+        <ul>
+          <li>Sinner's Blood <span>${fmt(1 * demihumanCount)}</span></li>
+          <li>Arrow Mushroom <span>${fmt(4 * demihumanCount)}</span></li>
+          <li>Black Stone Powder <span>${fmt(3 * demihumanCount)}</span></li>
+          <li>Fir Sap <span>${fmt(4 * demihumanCount)}</span></li>
+        </ul>
+      </div>
+
+      <div class="elixir">
+        <h3>Elixir of Will × ${fmt(demihumanCount)}</h3>
+        <ul>
+          <li>Pure Powder Reagent <span>${fmt(1 * demihumanCount)}</span></li>
+          <li>Wolf/Rhino Blood <span>${fmt(6 * demihumanCount)}</span></li>
+          <li>Sunrise Herb <span>${fmt(4 * demihumanCount)}</span></li>
+          <li>Purified Water <span>${fmt(3 * demihumanCount)}</span></li>
+        </ul>
+      </div>
+
+    </div>
+  `;
+}
+
+if(currentMode === "human"){
+
+  const humanCount = n * 3;
+
+  // Additional catalyst
+  catalysts += n;
+  
+  
+  // Elixir of Human
+  add("Clown's Blood", 1 * humanCount);
+  add("Fortune Teller Mushroom", 4 * humanCount);
+  add("Black Stone Powder", 3 * humanCount);
+  add("Maple Sap", 4 * humanCount);
+
+  // Elixir of Will
+  add("Pure Powder Reagent", 1 * humanCount);
+  add("Wolf/Rhino Blood", 6 * humanCount);
+  add("Sunrise Herb", 4 * humanCount);
+  add("Purified Water", 3 * humanCount);
+
+  breakdownHtml += `
+    <div class="card">
+      <h2>Harmony Draught - Demihuman × ${fmt(n)}</h2>
+      <div class="elixir">
+	  
+        <h3>Spellbound Catalyst × ${fmt(n)}</h3>
+      </div>
+	  
+	  <div class="elixir">
+	  
+        <h3>Harmony Draught × ${fmt(n)}</h3>
+      </div>
+
+      <div class="elixir">
+        <h3>Elixir of Human × ${fmt(humanCount)}</h3>
+        <ul>
+          <li>Clown's Blood <span>${fmt(1 * humanCount)}</span></li>
+          <li>Fortune Teller Mushroom <span>${fmt(4 * humanCount)}</span></li>
+          <li>Black Stone Powder <span>${fmt(3 * humanCount)}</span></li>
+          <li>Maple Sap <span>${fmt(4 * humanCount)}</span></li>
+        </ul>
+      </div>
+
+      <div class="elixir">
+        <h3>Elixir of Will × ${fmt(humanCount)}</h3>
+        <ul>
+          <li>Pure Powder Reagent <span>${fmt(1 * humanCount)}</span></li>
+          <li>Wolf/Rhino Blood <span>${fmt(6 * humanCount)}</span></li>
+          <li>Sunrise Herb <span>${fmt(4 * humanCount)}</span></li>
+          <li>Purified Water <span>${fmt(3 * humanCount)}</span></li>
+        </ul>
+      </div>
+
+    </div>
+  `;
+}
+
+const groups = {
+  "Basic Materials": [],
+  "Saps": [],
+  "Mushrooms": [],
+  "Bloods": [],
+  "Powders": [],
+  "Oils": []
+};
+
+  Object.entries(totals).forEach(([name, amount]) => {
+    groups[categorize(name)].push([name, amount]);
+  });
+
+let rows = '';
+
+Object.entries(groups).forEach(([groupName, items]) => {
+
+  items.sort((a,b)=>
+  a[0].toLowerCase().localeCompare(b[0].toLowerCase())
+);
+
+  if(items.length){
+
+    rows += `
+      <tr class="category">
+        <th colspan="2">${groupName}</th>
+      </tr>
+    `;
+
+    items.forEach(([name, amount]) => {
+
+      rows += `
+        <tr>
+          <td>${name}</td>
+          <td>${fmt(amount)}</td>
+        </tr>
+      `;
+    });
+  }
+});
+
+const summaryHtml = `
+  <div class="card">
+    <h2>
+${currentMode === "harmony"
+  ? `Total Materials for ${fmt(n)} Harmony Draughts`
+  : currentMode === "edania"
+    ? `Total Materials for ${fmt(n)} Harmony Draught - Edania`
+    : currentMode === "kamasylvia"
+      ? `Total Materials for ${fmt(n)} Harmony Draught - Kamasylvia`
+	  : currentMode === "demihuman"
+		? `Total Materials for ${fmt(n)} Harmony Draught - Demihuman`
+			: currentMode === "human"
+			? `Total Materials for ${fmt(n)} Harmony Draught - Human`
+			: `Total Materials for ${fmt(n)} Harmony Draughts`
+}
+</h2>
+
+    <table>
+      <tr>
+        <th>Raw Ingredient</th>
+        <th>Total</th>
+      </tr>
+
+      ${rows}
+    </table>
+  </div>
+`;
+
+  document.getElementById('out').innerHTML = `
+    <h2 style="margin-top:28px">Breakdown by Draught</h2>
+    <div class="grid">
+      ${breakdownHtml}
+    </div>
+
+    ${summaryHtml}
+  `;
+}
+
+qty.addEventListener('input', render);
+
+render();
+
+</script>
+
+</body>
+</html>
