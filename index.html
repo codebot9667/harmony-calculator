@@ -144,17 +144,26 @@ th:last-child{
 
 <div class="input">
   <button class="btn" onclick="setMode('harmony')">Harmony</button>
+</div>
+
+<div class="input" style="margin-top:12px;">
+  <span style="
+    color:#b9a8ff;
+    font-weight:bold;
+    margin-right:8px;
+  ">
+    Variants:
+  </span>
+
   <button class="btn" onclick="setMode('edania')">Edania</button>
   <button class="btn" onclick="setMode('kamasylvia')">Kamasylvia</button>
   <button class="btn" onclick="setMode('demihuman')">Demihuman</button>
   <button class="btn" onclick="setMode('human')">Human</button>
 </div>
 
-<div class="input">
+<div class="input" style="margin-top:24px;">
   <label for="qty">Harmony Draughts to craft:</label>
-
   <input id="qty" type="number" min="0" step="1" value="10">
-
 </div>
 
 <div class="card" style="
@@ -184,6 +193,7 @@ th:last-child{
     <li>You may end up getting more elixirs depending on your Alchemy Mastery.</li><br>
     <li>All shown required elixirs are green-grade elixirs.</li><br>
     <li>Blue-grade elixirs can be used as a substitute to green-grade elixirs at a 1:3 ratio.<br>30 green elixirs = 10 blue elixirs.</li><br>
+	<li>Blue/Green-grade mushrooms can be used as a substitute to normal-grade mushrooms at a 8/4:1 ration.<br>80 white mushrooms = 2 green/1 blue mushroom.</li><br>
     <li>To craft draughts use processing/simple alchemy.<br>To craft elixirs use alchemy table at your residence.</li><br>
   </ul>
 </div>
@@ -306,14 +316,12 @@ function render(){
   };
 
   let breakdownHtml = '';
-  let catalysts = 0;
 
+if(currentMode === "harmony"){
 for(const [draughtName, elixirs] of Object.entries(DATA)){
 
     const draughtAmount = DRAUGHT_BASE * factor;
     const catalystAmount = CATALYST_BASE * factor;
-
-    catalysts += catalystAmount;
 
     breakdownHtml += `
       <div class="card">
@@ -338,7 +346,7 @@ for(const [draughtName, elixirs] of Object.entries(DATA)){
         const ingredient = entry.slice(0, pos);
         const amount = Number(entry.slice(pos + 1)) * factor;
 
-        add(ingredient, amount);
+		add(ingredient, amount);
 
         breakdownHtml += `
           <li>${ingredient}<span>${fmt(amount)}</span></li>
@@ -349,19 +357,18 @@ for(const [draughtName, elixirs] of Object.entries(DATA)){
           </ul>
         </div>
       `;
-    }
+	}
 
     breakdownHtml += `</div>`;
+  }
   }
   
 if(currentMode === "edania"){
 
   const edaniaCount = n * 3;
 
-  // Additional catalyst
-  catalysts += n;
-  
-  
+	add("Harmony Draught", n);
+	
   // Elixir of Edania
   add("Sinner's Blood", 2 * edaniaCount);
   add("Trace of Nature", 4 * edaniaCount);
@@ -383,10 +390,11 @@ if(currentMode === "edania"){
         <h3>Spellbound Catalyst × ${fmt(n)}</h3>
       </div>
 	  
-	  <div class="elixir">
-	  
-        <h3>Harmony Draught × ${fmt(n)}</h3>
-      </div>
+	<div class="elixir">
+		<h3>
+			Harmony Draught × ${fmt(n)} (pre-crafted)
+		</h3>
+	</div>
 
       <div class="elixir">
         <h3>Elixir of Edania × ${fmt(edaniaCount)}</h3>
@@ -417,9 +425,7 @@ if(currentMode === "kamasylvia"){
 
   const kamasylviaCount = n * 3;
 
-  // Additional catalyst
-  catalysts += n;
-  
+	add("Harmony Draught", n); 
   
   // Griffon's Elixir
   add("Griffon Claw", 1 * kamasylviaCount);
@@ -444,7 +450,7 @@ if(currentMode === "kamasylvia"){
 	  
 	  <div class="elixir">
 	  
-        <h3>Harmony Draught × ${fmt(n)}</h3>
+        <h3>Harmony Draught × ${fmt(n)} (pre-crafted)</h3>
       </div>
 
       <div class="elixir">
@@ -476,9 +482,7 @@ if(currentMode === "demihuman"){
 
   const demihumanCount = n * 3;
 
-  // Additional catalyst
-  catalysts += n;
-  
+	add("Harmony Draught", n); 
   
   // Elixir of Demihuman
   add("Sinner's Blood", 1 * demihumanCount);
@@ -502,7 +506,7 @@ if(currentMode === "demihuman"){
 	  
 	  <div class="elixir">
 	  
-        <h3>Harmony Draught × ${fmt(n)}</h3>
+        <h3>Harmony Draught × ${fmt(n)} (pre-crafted)</h3>
       </div>
 
       <div class="elixir">
@@ -533,9 +537,7 @@ if(currentMode === "human"){
 
   const humanCount = n * 3;
 
-  // Additional catalyst
-  catalysts += n;
-  
+	add("Harmony Draught", n);
   
   // Elixir of Human
   add("Clown's Blood", 1 * humanCount);
@@ -551,7 +553,7 @@ if(currentMode === "human"){
 
   breakdownHtml += `
     <div class="card">
-      <h2>Harmony Draught - Demihuman × ${fmt(n)}</h2>
+      <h2>Harmony Draught - Human × ${fmt(n)}</h2>
       <div class="elixir">
 	  
         <h3>Spellbound Catalyst × ${fmt(n)}</h3>
@@ -559,7 +561,7 @@ if(currentMode === "human"){
 	  
 	  <div class="elixir">
 	  
-        <h3>Harmony Draught × ${fmt(n)}</h3>
+        <h3>Harmony Draught × ${fmt(n)} (pre-crafted)</h3>
       </div>
 
       <div class="elixir">
@@ -646,8 +648,8 @@ ${currentMode === "harmony"
 
     <table>
       <tr>
-        <th>Raw Ingredient</th>
-        <th>Total</th>
+        <th>Raw Ingredients</th>
+        <th>Total Amount</th>
       </tr>
 
       ${rows}
